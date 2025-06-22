@@ -19,7 +19,7 @@
       height: 600px;
       display: none;
     }
-    #startButton {
+    #startButton, #restartButton {
       padding: 15px 30px;
       font-size: 18px;
       background-color: #28a745;
@@ -28,18 +28,41 @@
       border-radius: 8px;
       cursor: pointer;
       margin-top: 30px;
+      display: inline-block;
+    }
+    #message {
+      font-size: 22px;
+      margin: 15px;
+      color: #ffd700;
+      min-height: 30px;
     }
   </style>
 </head>
 <body>
   <h1>Jogo: Coleta Seletiva</h1>
   <button id="startButton">Iniciar Jogo</button>
+  <button id="restartButton" style="display: none;">Reiniciar Jogo</button>
+  <div id="message"></div>
   <div id="gameContainer"></div>
 
   <script>
     let game;
-    document.getElementById('startButton').addEventListener('click', () => {
-      document.getElementById('startButton').style.display = 'none';
+    let pontos = 0;
+    let pontosText;
+    let fase = 1;
+    let lixos;
+    let lixoGroup;
+    let permiteTodos = false;
+    const msgEl = document.getElementById('message');
+    const startBtn = document.getElementById('startButton');
+    const restartBtn = document.getElementById('restartButton');
+
+    startBtn.addEventListener('click', iniciarJogo);
+    restartBtn.addEventListener('click', reiniciarJogo);
+
+    function iniciarJogo() {
+      startBtn.style.display = 'none';
+      restartBtn.style.display = 'none';
       document.getElementById('gameContainer').style.display = 'block';
 
       const config = {
@@ -51,12 +74,7 @@
       };
 
       game = new Phaser.Game(config);
-    });
-
-    let pontos = 0;
-    let pontosText;
-    let fase = 1;
-    let lixos;
+    }
 
     function preload() {
       this.load.image('fundo', 'fundo1.jpg');
@@ -69,34 +87,77 @@
 
     function create() {
       this.add.image(400, 300, 'fundo');
-      pontosText = this.add.text(16, 16, 'Pontos: 0', { fontSize: '24px', fill: '#fff' });
+      pontos = 0;
+      fase = 1;
+      permiteTodos = false;
 
+      pontosText = this.add.text(16, 16, 'Pontos: 0', { fontSize: '24px', fill: '#fff' });
       lixos = ['plastico', 'papel', 'metal'];
+
+      msgEl.textContent = 'Clique no plástico primeiro!';
       gerarLixos.call(this);
     }
 
     function gerarLixos() {
+      if (lixoGroup) {
+        lixoGroup.clear(true, true);
+      }
+      lixoGroup = this.add.group();
+
       for (let i = 0; i < 6; i++) {
         const tipo = Phaser.Math.RND.pick(lixos);
         const x = Phaser.Math.Between(50, 750);
         const y = Phaser.Math.Between(100, 550);
-        const lixo = this.add.image(x, y, tipo).setInteractive();
-        lixo.setScale(0.2);
-        lixo.on('pointerdown', () => {
-          lixo.destroy();
-          pontos += 10;
-          pontosText.setText('Pontos: ' + pontos);
-          if (pontos === 50 && fase === 1) {
-            fase = 2;
-            lixos = ['vidro', 'organico'];
-            alert('Parabéns! Agora colete vidro e orgânico!');
-            gerarLixos.call(this);
+        const lixo = this.add.image(x, y, tipo).setScale(0.2);
+        lixoGroup.add(lixo);
+
+        if (!permiteTodos) {
+          if (tipo === 'plastico') {
+            lixo.setInteractive();
+            lixo.on('pointerdown', () => {
+              lixo.destroy();
+              pontos += 10;
+              pontosText.setText('Pontos: ' + pontos);
+              verificarFase.call(this);
+              verificarFim.call(this);
+            });
           }
-        });
+        } else {
+          lixo.setInteractive();
+          lixo.on('pointerdown', () => {
+            lixo.destroy();
+            pontos += 10;
+            pontosText.setText('Pontos: ' + pontos);
+            verificarFim.call(this);
+          });
+        }
       }
+    }
+
+    function verificarFase() {
+      if (pontos === 50 && fase === 1) {
+        fase = 2;
+        permiteTodos = true;
+        lixos = ['plastico', 'papel', 'metal', 'vidro', 'organico'];
+        msgEl.textContent = 'Agora colete todos os tipos!';
+        gerarLixos.call(this);
+      }
+    }
+
+    function verificarFim() {
+      if (lixoGroup.countActive(true) === 0 && permiteTodos) {
+        msgEl.textContent = 'Você conseguiu reciclar tudo!';
+        restartBtn.style.display = 'inline-block';
+      }
+    }
+
+    function reiniciarJogo() {
+      game.destroy(true);
+      iniciarJogo();
     }
 
     function update() {}
   </script>
 </body>
 </html>
+
