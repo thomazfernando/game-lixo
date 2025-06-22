@@ -92,7 +92,7 @@
       permiteTodos = false;
 
       pontosText = this.add.text(16, 16, 'Pontos: 0', { fontSize: '24px', fill: '#fff' });
-      lixos = ['plastico', 'papel', 'metal'];
+      lixos = ['plastico']; // fase inicial: só plástico
 
       msgEl.textContent = 'Clique no plástico primeiro!';
       gerarLixos.call(this);
@@ -111,31 +111,22 @@
         const lixo = this.add.image(x, y, tipo).setScale(0.2);
         lixoGroup.add(lixo);
 
-        if (!permiteTodos) {
-          if (tipo === 'plastico') {
-            lixo.setInteractive();
-            lixo.on('pointerdown', () => {
-              lixo.destroy();
-              pontos += 10;
-              pontosText.setText('Pontos: ' + pontos);
-              verificarFase.call(this);
-              verificarFim.call(this);
-            });
+        lixo.setInteractive();
+        lixo.on('pointerdown', () => {
+          lixo.destroy();
+          pontos += 10;
+          pontosText.setText('Pontos: ' + pontos);
+
+          if (fase === 1) {
+            verificarFase.call(this);
           }
-        } else {
-          lixo.setInteractive();
-          lixo.on('pointerdown', () => {
-            lixo.destroy();
-            pontos += 10;
-            pontosText.setText('Pontos: ' + pontos);
-            verificarFim.call(this);
-          });
-        }
+          verificarFim.call(this);
+        });
       }
     }
 
     function verificarFase() {
-      if (pontos === 50 && fase === 1) {
+      if (pontos >= 50 && fase === 1) {
         fase = 2;
         permiteTodos = true;
         lixos = ['plastico', 'papel', 'metal', 'vidro', 'organico'];
@@ -160,4 +151,3 @@
   </script>
 </body>
 </html>
-
