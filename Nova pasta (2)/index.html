@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jogo da Coleta de Lixo</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #222;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    #gameContainer {
+      margin: 0 auto;
+      width: 800px;
+      height: 600px;
+      display: none;
+    }
+    #startButton {
+      padding: 15px 30px;
+      font-size: 18px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogo: Coleta Seletiva</h1>
+  <button id="startButton">Iniciar Jogo</button>
+  <div id="gameContainer"></div>
+
+  <script>
+    let game;
+    document.getElementById('startButton').addEventListener('click', () => {
+      document.getElementById('startButton').style.display = 'none';
+      document.getElementById('gameContainer').style.display = 'block';
+
+      const config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        parent: 'gameContainer',
+        scene: { preload, create, update }
+      };
+
+      game = new Phaser.Game(config);
+    });
+
+    let pontos = 0;
+    let pontosText;
+    let fase = 1;
+    let lixos;
+
+    function preload() {
+      this.load.image('fundo', 'fundo1.jpg');
+      this.load.image('plastico', 'plastico.jpg');
+      this.load.image('papel', 'papel.jpg');
+      this.load.image('metal', 'metal.jpg');
+      this.load.image('vidro', 'vidro.jpg');
+      this.load.image('organico', 'organico.jpg');
+    }
+
+    function create() {
+      this.add.image(400, 300, 'fundo');
+      pontosText = this.add.text(16, 16, 'Pontos: 0', { fontSize: '24px', fill: '#fff' });
+
+      lixos = ['plastico', 'papel', 'metal'];
+      gerarLixos.call(this);
+    }
+
+    function gerarLixos() {
+      for (let i = 0; i < 6; i++) {
+        const tipo = Phaser.Math.RND.pick(lixos);
+        const x = Phaser.Math.Between(50, 750);
+        const y = Phaser.Math.Between(100, 550);
+        const lixo = this.add.image(x, y, tipo).setInteractive();
+        lixo.setScale(0.2);
+        lixo.on('pointerdown', () => {
+          lixo.destroy();
+          pontos += 10;
+          pontosText.setText('Pontos: ' + pontos);
+          if (pontos === 50 && fase === 1) {
+            fase = 2;
+            lixos = ['vidro', 'organico'];
+            alert('Parabéns! Agora colete vidro e orgânico!');
+            gerarLixos.call(this);
+          }
+        });
+      }
+    }
+
+    function update() {}
+  </script>
+</body>
+</html>
